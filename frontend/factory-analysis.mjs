@@ -2,13 +2,13 @@ import {steelPanel} from './industrial-themes.mjs';
 import {factoryRequest,measurementText,factoryBase,factorySession,observationSource} from './factory-client.mjs';
 import {factoryRefresh} from './factory-refresh.mjs';
 import {reconcileOrderList} from './live-buttons.mjs';
-import {initDeviceWorkflow} from './device-workflow.mjs?v=49';
+import {initDeviceWorkflow} from './device-workflow.mjs?v=51';
 const host=document.getElementById('factory-analysis');
 const names={open:'待指派',assigned:'已指派',in_progress:'处理中',pending_review:'待复核',closed:'已关闭'};
 let summary,impact,order,frames=[],timer,stopped=false,frameRequest=0,impactRequest=0,syncFeedControls=()=>{};
 const $=id=>host.querySelector('#'+id);
 const text=(tag,value,className)=>{const node=document.createElement(tag);node.textContent=value;if(className)node.className=className;return node;};
-const area=v=>({a:'A 装配',b:'B 动力',overview:'室外'}[v]||v);
+const area=v=>({a:'A 工程训练',b:'B 后勤保障',overview:'室外'}[v]||v);
 const time=value=>new Date(value).toLocaleString('zh-CN',{hour12:false});
 const workflow={impact:'选 B-05 → 查询影响链 → 在模型高亮关联；需要现场核查时点击“发起复核工单”。候选管线须先核对图纸。',plans:'查看已经运行的演示冲突，或“填写冲突示例” → 核对时间和范围 → 保存计划并检查。',replay:'读取历史记录 → 拖动时间轴看当时位置与报警 → 返回实时。刚启动时历史较短，等待采样后再看。',orders:'使用页首当前账号 → 点击列表工单 → 选择有效维修账号 → 指派 → 被指派人开始处理 → 填凭证提交 → 另一名复核人复核关闭。',energy:'联动模拟每 5 秒采样；也可填写演示电表示例 → 导入电表记录。有效相邻读数够两条才产生 kWh 积分。'};
 function explainError(e){return e.status===404&&e.message==='Not Found'?`分析接口不存在（404）。当前 GIS 后端：${factoryBase}。请用新版源码的 run_demo.py 同时启动前后端，确认端口配置；仅刷新页面无法更新旧后端。`:e.message;}
@@ -21,7 +21,7 @@ function selectTab(key){host.querySelectorAll('[data-analysis-tab]').forEach(b=>
 window.addEventListener('analysis-navigate',e=>{if(!host||!workflow[e.detail.tab])return;selectTab(e.detail.tab);host.scrollIntoView({behavior:'smooth',block:'start'});});
 
 if(host){
- host.innerHTML=`<div class="module-heading"><div><span class="eyebrow">FACTORY ANALYSIS / TRACEABLE OPERATIONS</span><h2>校园分析与作业闭环</h2></div><button id="analysis-refresh">刷新分析</button></div>
+ host.innerHTML=`<div class="module-heading"><div><span class="eyebrow">CAMPUS SAFETY / TRACEABLE OPERATIONS</span><h2>校园分析与作业闭环</h2></div><button id="analysis-refresh">刷新分析</button></div>
  <div class="feed-console" id="demo-feed-console"><strong>联动模拟数据源</strong><span id="demo-feed-state" role="status">读取采样状态…</span><div class="feed-actions"><button id="demo-feed-start" disabled>启动五项联动演示</button><button id="demo-feed-stop" disabled>停止联动采样</button></div><p>后台模拟：室外人员轨迹、B-05 温升场景、作业冲突、待处理工单与持续电表采样；未接现场设备，工单仍需手动处理和复核。</p></div><p id="analysis-status" role="status">正在连接分析后台…</p><p class="analysis-boundary">连接台账、作业计划与电表读数须由现场核实；演示数据单独标明。工单操作绑定登录账号与岗位权限；演示账号不证明真实人员身份。</p>
  <div class="analysis-tabs" role="tablist" aria-label="校园分析"><button role="tab" data-analysis-tab="impact" aria-selected="true">设备影响链</button><button role="tab" data-analysis-tab="plans" aria-selected="false">作业冲突</button><button role="tab" data-analysis-tab="replay" aria-selected="false">险情回放</button><button role="tab" data-analysis-tab="orders" aria-selected="false">维修闭环</button><button role="tab" data-analysis-tab="energy" aria-selected="false">能耗与空转</button></div>
  <p class="analysis-help" id="analysis-operation-help">${workflow.impact}</p><div class="analysis-content"><section data-analysis-panel="impact"><div class="analysis-controls"><label>关联对象 <select id="impact-entity"></select></label><button id="impact-load">查询影响链</button><button id="impact-highlight">在模型高亮关联</button><button id="impact-order">发起复核工单</button></div><p id="impact-basis"></p><div id="impact-nodes" class="impact-chain"></div><div id="impact-edges"></div><div id="impact-people"></div><div id="impact-orders"></div><details><summary>配置连接台账（完整替换，保存前请备份）</summary><p>连接须填写 relationKind（power/fluid/control/spatial/other/unknown）、direction（forward/bidirectional/unknown）和 condition 适用工况。旧台账默认方向未核验；verified=true 还需 reference 依据与 reviewer 复核人。方向与连通不代表故障必然传播。</p><textarea id="graph-json" rows="8" aria-label="连接台账 JSON"></textarea><button id="graph-save">保存连接台账</button><button id="graph-export">导出当前台账</button></details></section>

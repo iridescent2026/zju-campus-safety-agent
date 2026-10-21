@@ -2,3 +2,6 @@ frontend/vendor/** -text
 *.png binary
 # Keep downloaded glTF bytes identical to the asset provenance hashes.
 frontend/assets/factory/*.gltf -text
+
+# Preserve original license bytes alongside recorded asset hashes.
+frontend/assets/factory/*-license.txt -text

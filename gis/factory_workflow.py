@@ -12,6 +12,7 @@ from typing import Literal
 from common.runtime import is_fresh
 from gis.factory_analysis import OrderCreate, OrderAction, WorkPlan, conflicts, seconds
 from gis.factory_business import SCENARIO, evaluate_registered, maintenance_check
+from gis.campus_scenario import service_context
 
 class ChatMessage(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -130,7 +131,7 @@ class Workflow:
             {'step':'提交与复核', 'reason':f'该设备工单 {len(orders)} 张', 'action':'安全员确认核查工单，被指派账号提交凭证，另一复核账号关闭或退回', 'role':'维修员 → 复核员'},
         ]
         evidence = {'observation':obs['status'],'source':obs['source'],'graph':docs['graph'],'plans':docs['plans'],'instance':data['instanceId'],'rules':docs.get('businessRules',[]),'scenario':scenario}
-        return {'entityId':id,'factoryRevision':data['revision'],'instanceId':data['instanceId'],'capturedAt':clock.isoformat(),'observation':obs,'impact':impact,'people':people,'workPlans':work,'orders':orders,'toolResults':trace,'evidenceKey':digest(evidence),'useTestRule':use_test,
+        return {'entityId':id,'factoryRevision':data['revision'],'instanceId':data['instanceId'],'capturedAt':clock.isoformat(),'observation':obs,'impact':impact,'people':people,'workPlans':work,'orders':orders,'campusService':service_context(id),'toolResults':trace,'evidenceKey':digest(evidence),'useTestRule':use_test,
             'ledger':[{'field':'设备编号、名称、区域','status':'已知','basis':'当前项目台账，非现场核验'}, {'field':'连接与影响范围','status':'待核验' if impact['hasUnverified'] else '已填写复核依据','basis':impact['basis']}, {'field':'设备适用规则','status':obs['rule']['status'],'basis':obs['rule']['basis']}, {'field':'观测来源','status':'已知','basis':obs['source']}, {'field':'真实业务岗位与作业计划','status':'待核验','basis':'演示账号与计划不代表企业组织或现场许可'}],
             'scenario':scenario,'recommendations':recommendations,
             'nextSteps':['核对采集来源、设备手册及现场读数','核对候选连接和相关作业计划','由安全员确认核查工单并指派维修账号','处理凭证由另一个复核账号审核'], 'boundary':'规则工具编排；不诊断故障原因、不控制设备、不代替工程审查。'}
@@ -185,11 +186,16 @@ class Workflow:
         from gis.workflow_language import interpret, model_enabled, model_config, display_observed_time
         import os
         if model_enabled():self.accounts.require(request)
-        parsed=interpret(query,command.entityId,str(self.accounts.path),devices=self.factory.snapshot()['entities']);id=parsed['entityId'];intent=parsed['intent']
+        classified=model_config()['responsePolicy']=='classified-template'
+        shortcut=command.answerMode=='template' and 'answerMode' in command.model_fields_set
+        parsed=interpret(query,command.entityId,str(self.accounts.path),devices=self.factory.snapshot()['entities'],force_model=classified and not shortcut);id=parsed['entityId'];intent=parsed['intent']
         if parsed.get('outsideScope') and model_enabled():
             self.accounts.require(request)
             from gis.workflow_language import answer_general
-            result=answer_general(query,[m.model_dump() for m in command.history],str(self.accounts.path))
+            # Template replies contain local observations. The classified policy
+            # sends only the current question, never those prior backend facts.
+            history=[] if classified else [m.model_dump() for m in command.history]
+            result=answer_general(query,history,str(self.accounts.path))
             traces=([{**parsed['trace'],'input':{'query':query}}] if parsed['trace'] else [])+[result['trace']]
             return {'success':result['success'],'answer':result['answer'],'intent':'general','engine':model_config()['provider']+'-general-chat','languageEngine':parsed['engine'],'tool_calls':[t['tool'] for t in traces],'tool_results':traces,'draft':None}
         if parsed['clarification']:
@@ -209,6 +215,8 @@ class Workflow:
             related='、'.join(n['id']+' '+n['title'] for n in case['impact']['nodes'] if n['id']!=id) or '暂无连接台账'
             reachable='、'.join(case['impact'].get('directionalCandidates',[])) or '暂无按连接方向可达的候选对象'
             answer=f'{id} · {obs["title"]}：故障影响核查\n这是故障假设分析，不表示后台已确认设备损坏。\n候选关联：{related}。\n按台账方向可达的候选：{reachable}；其他关联对象可能是上游供电或空间邻近对象，不能直接视为被该设备故障影响。\n'+case['impact']['basis']+('包含未确认连接，不能认定故障传播。' if case['impact']['hasUnverified'] else '填写依据不等于工程因果验证。')
+            campus=case.get('campusService')
+            if campus:answer+='\n校园服务核查（设计场景）：'+campus['hypothesis']+'；'+campus['verification']
         elif intent=='people':
             answer=f'关联区域有效人员：'+('、'.join(p['id']+' '+p['title'] for p in case['people']['valid']) or '未发现有效记录')+f'；同区域位置未知 {len(case["people"]["unknownInWorkArea"])} 人。相关作业 {len(case["workPlans"]["items"])} 项、范围时段重叠 {len(case["workPlans"]["conflicts"])} 组；未匹配计划不代表没有现场作业。'
             if '冲突' in query:answer+='拟检修尚未指定时段和范围，不能判断这次检修是否冲突；请在“候选检修计划”中填写后检查。'
@@ -235,8 +243,8 @@ class Workflow:
             elif other=='review':extra.append('复核：处理账号提交凭证，由另一复核账号关闭或退回；不通过聊天直接关闭。')
             elif other=='recommendations':extra.append('建议：'+'；'.join(r['action'] for r in case['recommendations']))
         if extra:answer+='\n\n'+'\n'.join(extra)
-        answer_engine='rule-tool-orchestrator'
-        if command.answerMode=='grounded' and draft is None:
+        answer_engine=model_config()['provider']+'-classified-template' if classified and parsed['engine']=='language-model-classification' else 'rule-tool-orchestrator'
+        if command.answerMode=='grounded' and draft is None and not classified:
             from gis.workflow_language import answer_grounded
             generated=answer_grounded(query,case,parsed['intents'],[m.model_dump() for m in command.history],str(self.accounts.path))
             case['toolResults'].append(generated['trace'])

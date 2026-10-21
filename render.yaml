@@ -1,7 +1,7 @@
 # Free trial only. Paid instances/disks require an explicit user decision.
 services:
   - type: web
-    name: gongan-zhitong-demo
+    name: zju-campus-safety-agent
     runtime: docker
     plan: free
     region: singapore
@@ -21,3 +21,18 @@ services:
 
       - key: DEMO_WORKSPACES_REQUIRED
         value: "1"
+
+      - key: WORKFLOW_MODEL_PROVIDER
+        value: deepseek
+      - key: WORKFLOW_MODEL_NAME
+        value: deepseek-flash
+      - key: WORKFLOW_MODEL_BASE_URL
+        value: https://api.deepseek.com
+      - key: WORKFLOW_MODEL_ENABLED
+        value: "1"
+      - key: WORKFLOW_RESPONSE_POLICY
+        value: classified-template
+      - key: WORKFLOW_TEMPLATE_FIRST
+        value: "1"
+      - key: DEEPSEEK_API_KEY
+        sync: false

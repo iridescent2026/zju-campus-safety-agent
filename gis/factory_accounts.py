@@ -161,7 +161,8 @@ class Accounts:
                 return [{**self.public(row),**self.profile(db,row[0])} for row in db.execute('SELECT id,name,role FROM users ORDER BY id') if self.profile(db,row[0]).get('enabled',True)]
         @router.get('/mode')
         def mode():
-            return {'demoAccounts': self.demo_credentials, 'simulationEnabled':self.demo_enabled,'accountsConfigured': self.has_accounts(),'project':self.project,'storage':storage_status(),'language':{'configured':model_enabled(),'model':model_config()['model']}}
+            config=model_config()
+            return {'demoAccounts': self.demo_credentials, 'simulationEnabled':self.demo_enabled,'accountsConfigured': self.has_accounts(),'project':self.project,'storage':storage_status(),'language':{'configured':model_enabled(),'model':config['model'],'provider':config['provider'],'responsePolicy':config['responsePolicy']}}
         @router.post('/logout')
         def logout(request: Request):
             self.require(request)

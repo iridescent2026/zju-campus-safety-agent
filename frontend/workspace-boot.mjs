@@ -3,7 +3,7 @@ window.addEventListener('workspace-shell-ready',()=>{
  requestAnimationFrame(()=>document.documentElement.classList.remove('workspace-pending'));
 },{once:true});
 try{
- await import('./blackgold-workspace.mjs?v=46');
+ await import('./blackgold-workspace.mjs?v=50');
 }catch(error){
  console.error('Workspace initialization failed',error);
  document.documentElement.classList.add('workspace-failed');

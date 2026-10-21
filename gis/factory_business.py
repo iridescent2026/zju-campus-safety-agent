@@ -12,8 +12,8 @@ from gis.factory_analysis import Strict, WorkPlan, conflicts, seconds, stamp, aw
 
 SCENARIO = {
     'id': 'CAMPUS-DRAIN-B05', 'version': 1, 'status': 'design_assumption',
-    'title': '浙江大学校园后勤保障中心 · 排水泵组核查',
-    'description': '把 B-05 校园排水泵组映射到后勤保障中心排水设施。核查异常读数是否涉及配电、燃气管线、周边人员及检修时段；实际设备用途、运维规程和岗位职责待后勤部门核验。',
+    'title': '校园工程训练中心 · 后勤排水泵组核查',
+    'description': '把 B-05 校园排水泵组映射到后勤保障中心排水设施。核查异常读数、候选供电与排水管线、关联区域人员及检修时段；实际设备用途、运维规程和岗位职责待后勤部门核验。',
     'reference': '', 'author': 'prototype-design', 'history': [],
     'boundary': '这是校园业务场景设计假设，不是真实校务案例；泵组异常对教学、科研或师生生活的具体影响尚未确认。',
 }

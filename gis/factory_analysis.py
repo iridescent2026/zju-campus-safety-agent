@@ -245,8 +245,8 @@ class AnalysisStore:
                 nodes=[{'id':e['id'],'title':e['title'],'view':e['view'],'kind':e['kind']} for e in factory.snapshot()['entities']]
                 edges=[]
                 if factory.demo_enabled:
-                    nodes.append({'id':'PIPE-B-05','title':'B 区候选关联管廊','view':'b','kind':'pipe','modelGroup':'power-pipe-and-cable-bridge'})
-                    edges=[{'source':a,'target':b,'relation':r,'verified':False,'reference':'演示连接，待现场图纸复核','reviewer':''} for a,b,r in [('B-05','PIPE-B-05','候选管线关联'),('B-01','B-05','候选供电关联'),('B-05','Z007','泵组作业区域')]]
+                    nodes.append({'id':'PIPE-B-05','title':'后勤楼候选排水管廊','view':'b','kind':'pipe','modelGroup':'power-pipe-and-cable-bridge'})
+                    edges=[{'source':a,'target':b,'relation':r,'relationKind':kind,'direction':direction,'condition':condition,'verified':False,'reviewScope':'pending','reference':'校园示意台账，待图纸及隔离状态复核','reviewer':''} for a,b,r,kind,direction,condition in [('B-05','PIPE-B-05','候选排水管线关联','fluid','forward','假设排水支路接入且隔离阀处于连通状态；需核对实际图纸'),('B-01','B-05','候选供电关联','power','forward','假设本柜回路向泵组供电；需核对回路编号和隔离状态'),('B-05','Z007','泵房维护区域','spatial','bidirectional','仅表示空间关联，不表示故障传播')]]
                 self.put(db,'graph',{'nodes':nodes,'edges':edges})
 
     @contextmanager

@@ -8,7 +8,10 @@ from pathlib import Path
 def local_model_settings():
     if os.name != 'nt':
         return {}
-    path = Path(__file__).resolve().parents[1] / '.local' / 'aliyun-model.dpapi'
+    folder = Path(__file__).resolve().parents[1] / '.local'
+    path = folder / 'model.dpapi'
+    if not path.is_file():
+        path = folder / 'aliyun-model.dpapi'  # Existing installations.
     if not path.is_file():
         return {}
     # DPAPI binds the encrypted blob to this Windows account. No key is served
