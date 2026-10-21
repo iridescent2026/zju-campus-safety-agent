@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190" role="img" aria-label="工安智瞳，原版机械字标识">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190" role="img" aria-label="智安校园，校园安全智能体标识">
  <defs>
   <linearGradient id="silver" x2="0" y2="1"><stop stop-color="#f8fcff"/><stop offset=".25" stop-color="#aebdc6"/><stop offset=".43" stop-color="#e8f0f4"/><stop offset=".47" stop-color="#758995"/><stop offset=".7" stop-color="#d9e5eb"/><stop offset="1" stop-color="#9cabb5"/></linearGradient>
   <linearGradient id="teal" x2="0" y2="1"><stop stop-color="#377783"/><stop offset="1" stop-color="#16434e"/></linearGradient>
@@ -13,7 +13,7 @@
   <path d="m44 145 24 13 24-13Z" fill="#285f6a"/>
  </g>
  <g transform="translate(190 0) skewX(-7)">
-  <text x="9" y="125" fill="url(#silver)" stroke="#c0cdd4" stroke-width=".7" font-size="103" font-weight="900" font-family="Microsoft YaHei, sans-serif" letter-spacing="6" filter="url(#raised)">工安智瞳</text>
+  <text x="9" y="125" fill="url(#silver)" stroke="#c0cdd4" stroke-width=".7" font-size="103" font-weight="900" font-family="Microsoft YaHei, sans-serif" letter-spacing="6" filter="url(#raised)">智安校园</text>
  </g>
  <text x="195" y="169" fill="#acbec9" font-size="16" font-family="Arial, sans-serif" letter-spacing="5.2">CONSTRUCTION SAFETY AI</text>
 </svg>

@@ -48,7 +48,7 @@ class Accounts:
     def __init__(self, path, demo, sandbox=False):
         self.path = path
         self.sandbox = sandbox
-        self.project = "个人演示空间" if sandbox else os.getenv("PROJECT_NAME","工安智瞳 A/B 项目")
+        self.project = "个人演示空间" if sandbox else os.getenv("PROJECT_NAME","智安校园 A/B 项目")
         self.demo_enabled = demo
         supplied = os.getenv('FACTORY_ACCOUNTS_JSON')
         accounts = json.loads(supplied) if supplied and not sandbox else [dict(x) for x in DEMO_ACCOUNTS] if demo else []

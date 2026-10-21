@@ -181,7 +181,7 @@ $('factory-export').addEventListener('click',()=>{
     for(const info of infos){const p=places.get(info.id);if(!p)continue;ctx.fillStyle=markerColor(info);ctx.strokeStyle='#f3f7ed';ctx.lineWidth=1;ctx.save();ctx.translate(p.x+11,p.y+11);ctx.beginPath();if(info.kind==='person')ctx.arc(0,0,4,0,Math.PI*2);else{if(info.kind==='zone')ctx.rotate(Math.PI/4);ctx.rect(-3,-3,6,6);}ctx.fill();ctx.stroke();ctx.restore();}
     const exportInfo=markers.active?.info||selected;
     if(exportInfo){const p=places.get(exportInfo.id);if(p){ctx.font="600 18px 'Microsoft YaHei',sans-serif";const text=exportInfo.title,w=ctx.measureText(text).width+24,x=Math.max(5,Math.min(width-w-5,p.x+11-w/2)),y=Math.max(90,p.y-42);ctx.fillStyle='#142a32';ctx.strokeStyle='#91aaa7';ctx.beginPath();ctx.roundRect(x,y,w,34,4);ctx.fill();ctx.stroke();ctx.fillStyle='#f5ead2';ctx.fillText(text,x+12,y+23);}}
-    ctx.fillStyle='#94afb4';ctx.font="14px 'Microsoft YaHei',sans-serif";ctx.fillText('工安智瞳 · 校园场景设计示意',30,height-25);
+    ctx.fillStyle='#94afb4';ctx.font="14px 'Microsoft YaHei',sans-serif";ctx.fillText('智安校园 · 校园场景设计示意',30,height-25);
     const url=canvas.toDataURL('image/png');$('export-image').src=url;$('export-download').href=url;$('export-download').download=`校园场景-${current}.png`;$('image-export').showModal();
 });
 $('export-close').addEventListener('click',()=>$('image-export').close());

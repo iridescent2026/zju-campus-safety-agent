@@ -1,7 +1,7 @@
 (()=>{
  const workspace=document.querySelector('.workspace'),aside=document.querySelector('.sidebar');
  const legend=document.querySelector('.legend'),sensor=document.querySelector('.sensor-panel'),panel=document.querySelector('.panel');
- document.querySelector('.brand').innerHTML='<img class="brand-logo" src="logo.png" alt="工安智瞳 · Construction Safety AI">';
+ document.querySelector('.brand').innerHTML='<img class="brand-logo" src="logo.png" alt="智安校园 · Construction Safety AI">';
  const mode=document.createElement('button');mode.id='presentation-mode';mode.textContent='进入演示模式';mode.setAttribute('aria-pressed','false');document.querySelector('.top-actions').prepend(mode);
  const nav=document.createElement('nav');nav.className='command-rail';nav.setAttribute('aria-label','工作台导航');
  nav.innerHTML='<div class="rail-caption">CONTROL</div>'+[['overview','◈','全景'],['zones','▱','区域'],['devices','▣','设备监测'],['people','♟','人员管理'],['assistant','⌘','助手'],['sensor','◉','感知'],['legend','▤','图层']].map(([id,icon,label])=>`<button data-drawer="${id}" aria-expanded="false"><span aria-hidden="true">${icon}</span>${label}</button>`).join('');workspace.prepend(nav);
