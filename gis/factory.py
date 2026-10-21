@@ -91,7 +91,13 @@ class FactoryStore:
         self.instance_id = uuid.uuid4().hex
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.lock = threading.RLock()
+        self.request_driven = os.getenv('REQUEST_DRIVEN_DEMO')=='1'
+        from common.shared_state import SharedStateLock
+        self.lock = SharedStateLock(self) if self.request_driven else threading.RLock()
+        with self.lock:
+            self.initialize()
+
+    def initialize(self):
         with database_connect(self.path) as db:
             db.execute('CREATE TABLE IF NOT EXISTS factory_state (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)')
             row = db.execute('SELECT payload FROM factory_state WHERE id=1').fetchone()
@@ -115,7 +121,11 @@ class FactoryStore:
             for entity in self.data['entities']:
                 if entity.get('positionSource')!='telemetry': entity.pop('positionTimestamp',None)
                 if entity.get('measurementSource')!='telemetry': entity.pop('measurementTimestamp',None)
-        self.data['demo'] = None
+        demo=self.data.get('demo')
+        if not self.request_driven or (demo and demo.get('clock')!='unix'):
+            self.data['demo'] = None
+        if self.request_driven:
+            self.instance_id=self.data.setdefault('sharedInstanceId',uuid.uuid4().hex)
         self.started = time.monotonic()
         self.tick()
 
@@ -172,7 +182,7 @@ class FactoryStore:
             if demo:
                 for index_path,path in enumerate(demo_paths(demo['key'])):
                     e=next(e for e in self.data['entities'] if e['id']==path['id'])
-                    phase=((time.monotonic()-demo['started']+index_path*3)%24)/12
+                    phase=(((time.time() if self.request_driven else time.monotonic())-demo['started']+index_path*3)%24)/12
                     segment=(phase if phase<=1 else 2-phase)*(len(path['points'])-1)
                     index=min(len(path['points'])-2,math.floor(segment));fraction=segment-index
                     point=[a+(b-a)*fraction for a,b in zip(path['points'][index],path['points'][index+1])]
@@ -244,7 +254,7 @@ class FactoryStore:
                     if e.get('positionSource')=='telemetry':
                         raise HTTPException(409,'轨迹对象已有接口位置，不能由演示覆盖')
                 path=paths[0]
-                self.data['demo']={'key':command.key,'id':path['id'],'ids':[p['id'] for p in paths],'started':time.monotonic()}
+                self.data['demo']={'key':command.key,'id':path['id'],'ids':[p['id'] for p in paths],'started':time.time() if self.request_driven else time.monotonic(),**({'clock':'unix'} if self.request_driven else {})}
             elif command.action in ['stop','reset']:
                 paths=demo_paths(command.key)
                 if not paths:
@@ -308,6 +318,15 @@ def install_factory(app,path_override=None,sandbox=False):
             await asyncio.to_thread(analysis.record,store.snapshot())
             if not sandbox and hasattr(app.state,'workspaces'):await asyncio.to_thread(app.state.workspaces.tick)
 
+    if store.request_driven:
+        @app.middleware('http')
+        async def sample_on_read(request,call_next):
+            if request.method=='GET' and request.url.path=='/factory/state':
+                await asyncio.to_thread(store.tick)
+                await asyncio.to_thread(feed.tick)
+                await asyncio.to_thread(analysis.record,store.snapshot())
+            return await call_next(request)
+
     previous_lifespan=app.router.lifespan_context
 
     @asynccontextmanager
@@ -317,6 +336,9 @@ def install_factory(app,path_override=None,sandbox=False):
                 try:await asyncio.to_thread(feed.start)
                 except Exception as error:
                     feed.error='已跳过联动模拟启动：'+str(getattr(error,'detail',type(error).__name__))
+            if store.request_driven:
+                yield
+                return
             task=asyncio.create_task(sampler())
             app.state.factory_sampler=task
             try:

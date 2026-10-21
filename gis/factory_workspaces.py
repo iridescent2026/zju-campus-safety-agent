@@ -108,6 +108,7 @@ class Workspaces:
         request=Request(scope,receive=receive);path=scope['path'];token=request.headers.get('x-demo-workspace')
         try:
             if path=='/factory/auth/demo-session' and request.method=='POST':
+                if os.getenv('REQUEST_DRIVEN_DEMO')=='1':await asyncio.to_thread(self.tick)
                 return await self.app_router(scope,receive,send)
             if token:
                 if path.startswith('/factory/admin/workspaces'):raise HTTPException(403,'仅正式项目管理员可以管理全局演示空间')

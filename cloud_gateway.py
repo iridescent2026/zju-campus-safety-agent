@@ -18,12 +18,15 @@ HOP_HEADERS = {'connection','keep-alive','proxy-authenticate','proxy-authorizati
 
 @asynccontextmanager
 async def lifespan(app):
+    if os.getenv('REQUIRE_DURABLE_STORAGE')=='1' and not os.getenv('DATABASE_URL'):
+        raise RuntimeError('Configure persistent DATABASE_URL before publishing this deployment')
     data = Path(os.environ.get('DATA_DIR', str(ROOT/'cloud-data')))
     data.mkdir(parents=True,exist_ok=True)
     env={**os.environ,'GIS_API':'http://127.0.0.1:8000','ELEC_API':'http://127.0.0.1:8001',
          'FACTORY_DB_PATH':str(data/'factory.db'),'GIS_DB_PATH':str(data/'gis.db'),
          'ELECTRICAL_DB_PATH':str(data/'electrical.db'),'AGENT_DB_PATH':str(data/'agent.db')}
     env.setdefault('DEMO_MODE','1');env.setdefault('FACTORY_ANALYSIS_DEMO','1');env.setdefault('DEMO_WORKSPACES_REQUIRED','1')
+    startup_lock=None
     commands=[
         ['-m','uvicorn','gis.main:app','--host','127.0.0.1','--port','8000'],
         ['-m','uvicorn','electrical.main:app','--host','127.0.0.1','--port','8001'],
@@ -31,6 +34,10 @@ async def lifespan(app):
     ]
     children=[]
     try:
+        if os.getenv('REQUEST_DRIVEN_DEMO')=='1' and os.getenv('DATABASE_URL'):
+            from common.database import connect
+            startup_lock=await asyncio.to_thread(connect,data/'factory.db')
+            await asyncio.to_thread(startup_lock.execute,'SELECT pg_advisory_xact_lock(hashtext(?))',('campus-bootstrap',))
         for command in commands:
             children.append(subprocess.Popen([sys.executable,*command],cwd=ROOT,env=env))
         app.state.children=children
@@ -44,8 +51,13 @@ async def lifespan(app):
                 except httpx.HTTPError:pass
                 await asyncio.sleep(1)
             else:raise RuntimeError('Private APIs did not become healthy')
+            if startup_lock is not None:
+                await asyncio.to_thread(startup_lock.close)
+                startup_lock=None
             yield
     finally:
+        if startup_lock is not None:
+            await asyncio.to_thread(startup_lock.close)
         for child in children:
             if child.poll() is None:child.terminate()
         for child in children:

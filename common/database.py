@@ -17,7 +17,9 @@ class PostgreSQL:
         try:
             with _lock:
                 if self.schema not in _ready:
-                    self.db.execute(f'CREATE SCHEMA IF NOT EXISTS "{self.schema}"')
+                    with self.db.transaction():
+                        self.db.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',('schema-init:'+self.schema,))
+                        self.db.execute(f'CREATE SCHEMA IF NOT EXISTS "{self.schema}"')
                     _ready.add(self.schema)
             self.db.execute(f'SET search_path TO "{self.schema}"')
             self.db.autocommit=False
