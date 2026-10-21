@@ -23,7 +23,7 @@ test('two distinct work areas expose every hazard with a Chinese name and physic
         const floorDevices=scene.userData.devices.filter(d=>!['A-09','A-10','A-11','A-12'].includes(d.id));
         for(let i=0;i<floorDevices.length;i++)for(let j=i+1;j<floorDevices.length;j++){const x=floorDevices[i].anchor,z=floorDevices[j].anchor;assert.ok(Math.hypot(x[0]-z[0],x[2]-z[2])>=10,'equipment inspection areas must not overlap');}
     }
-    assert.ok(a.userData.devices.some(d=>d.title.includes('冲压')));assert.ok(b.userData.devices.some(d=>d.title.includes('10kV')));
+    assert.ok(a.userData.devices.some(d=>d.title.includes('压力试验')));assert.ok(b.userData.devices.some(d=>d.title.includes('10kV')));
     assert.equal(a.userData.architecture,'high-bay-steel');assert.equal(b.userData.architecture,'power-hall-with-control-wing');
     assert.ok(a.getObjectByName('steel-roof-trusses'));assert.ok(a.getObjectByName('A-10'));assert.ok(a.getObjectByName('A-12'));
     assert.ok(b.getObjectByName('basement-concrete-shell'));assert.ok(b.getObjectByName('basement-access-stairs'));assert.ok(b.getObjectByName('grated-cable-channel'));assert.equal(b.getObjectByName('steel-roof-trusses'),undefined);

@@ -25,9 +25,9 @@ export const ZONES=[
 ];
 
 export const PERSONNEL=[
-    ['P001','a','安全员',-6,.7],['P003','a','机械操作工',-23.5,-7],['P004','a','电工',-19,.3],['P005','a','装配工',-12,-.6],['P006','a','设备维修工',0,-.7],['P007','a','装配工',5,.6],['P008','a','工艺工程师',12,-.6],['P009','a','物流工',18,.6],['P010','a','焊工',23.8,-5],['P011','a','施工工人',-12,5],['P012','a','设备操作工',9,5],['P013','a','装配工',-1,13],
-    ['P002','b','设备维修工',-12,.7],['P014','b','电工',-36,-15],['P015','b','安全员',-35,0],['P016','b','电工',-2,-.6],['P017','b','管道工',20,.6],['P018','b','泵房操作工',22,18],['P019','b','工艺工程师',43,6],['P020','b','巡检人员',60,15],
-    ['P021','overview','门岗人员',12,47],['P022','overview','施工工人',-20,22],['P023','overview','施工工人',-41,12],['P024','overview','吊装工',35,4],['P025','overview','电工',60,43],['P026','overview','工程车司机',8,39]
+    ['P001','a','校园安全员',-6,.7],['P003','a','实验操作员',-23.5,-7],['P004','a','后勤电工',-19,.3],['P005','a','实验指导教师',-12,-.6],['P006','a','后勤维修工',0,-.7],['P007','a','实验指导教师',5,.6],['P008','a','实验室管理员',12,-.6],['P009','a','后勤物流员',18,.6],['P010','a','焊接实验学生',23.8,-5],['P011','a','实验室辅助人员',-12,5],['P012','a','实验操作员',9,5],['P013','a','实验指导教师',-1,13],
+    ['P002','b','后勤维修工',-12,.7],['P014','b','后勤电工',-36,-15],['P015','b','校园安全员',-35,0],['P016','b','后勤电工',-2,-.6],['P017','b','后勤管道工',20,.6],['P018','b','泵房值守员',22,18],['P019','b','能源站工程师',43,6],['P020','b','校园巡检员',60,15],
+    ['P021','overview','校门值守人员',12,47],['P022','overview','基建施工人员',-20,22],['P023','overview','基建施工人员',-41,12],['P024','overview','塔吊信号工',35,4],['P025','overview','后勤电工',60,43],['P026','overview','后勤车辆驾驶员',8,39]
 ].map(([id,view,role,x,z])=>({id,view,role,x,z}));
 
 export function buildFactory(view='overview',assets=new Map()) {
@@ -78,7 +78,7 @@ export function buildFactory(view='overview',assets=new Map()) {
         for(let dz=-d/2;dz<d/2;dz+=.9)for(const edge of [-1,1])box(g,x+edge*(w/2-.12),.09,z+dz,.22,.025,.45,C.gold);
     }
     function person(g,x,z,angle=0){
-        const p=group(g,'巡检人员');p.position.set(x,0,z);p.rotation.y=angle;
+        const p=group(g,'校园巡检员');p.position.set(x,0,z);p.rotation.y=angle;
         for(const dx of [-.16,.16]){box(p,dx,.48,0,.23,.8,.28,C.blue);box(p,dx,.12,.08,.26,.18,.4,C.dark);}
         box(p,0,1.12,0,.66,.65,.38,C.gold);box(p,0,1.02,.205,.68,.075,.035,0xe2e5cb);
         for(const dx of [-.4,.4])box(p,dx,1.1,0,.2,.65,.25,C.gold,0,0,dx*.25);
@@ -89,8 +89,8 @@ export function buildFactory(view='overview',assets=new Map()) {
     function registerPerson(p,def){
         p.name=def.id;p.scale.setScalar(view==='overview'?1.3:1.15);p.userData={id:def.id,kind:'person',view,title:def.role,role:def.role,origin:[def.x,def.z],anchor:[def.x,view==='overview'?3.1:2.7,def.z],text:`岗位：${def.role} · 本地模拟位置，进入危险区域时触发空间报警。`};people.push(p.userData);
     }
-    function registerEquipment(g,id,title,anchor,mobile=false,allowedZones=[]){
-        g.name=id;g.userData={id,kind:'device',view,title,anchor,mobile,allowedZones,origin:[g.position.x,g.position.z],text:mobile?'巡检关注：车辆行驶范围与人员隔离 · 本地模拟位置':'巡检关注：设备运行与作业隔离 · 场景设计示意'};devices.push(g.userData);return g;
+    function registerEquipment(g,id,title,anchor,mobile=false,allowedZones=[],text){
+        g.name=id;g.userData={id,kind:'device',view,title,anchor,mobile,allowedZones,origin:[g.position.x,g.position.z],text:text||(mobile?'巡检关注：施工车辆行驶范围与师生通行隔离 · 本地模拟位置':'巡检关注：塔吊吊装范围、限位与吊物下方隔离 · 校园场景设计示意')};devices.push(g.userData);return g;
     }
     function markZone(def){
         const [x,z]=def.center,[w,d]=def.size,y=view==='overview'?.23:.11;
@@ -145,7 +145,7 @@ export function buildFactory(view='overview',assets=new Map()) {
     }
     function powerDevice(id,title,text,x,z,w,d,height){return device(id,title,text,x,z,'power-assembly',{w,d,height});}
     function device(id,title,text,x,z,kind,options={}){
-        const g=group(root,id);g.position.set(x,0,z);g.userData={id,kind:'device',view,title,text:`${text} · 场景设计示意`,anchor:[x,options.height||3.4,z],zone:view.toUpperCase()};
+        const g=group(root,id);g.position.set(x,0,z);g.userData={id,kind:'device',view,title,text:`${text} · 校园场景设计示意`,anchor:[x,options.height||3.4,z],zone:view.toUpperCase()};
         devices.push(g.userData);hazard(g,0,0,options.w||5,options.d||4);
         if(kind==='cabinet'){
             for(let i=0;i<(options.count||1);i++){
@@ -234,7 +234,7 @@ export function buildFactory(view='overview',assets=new Map()) {
         return e;
     }
     function truck(g,x,z){
-        const t=group(g,'工程运输车');t.position.set(x,0,z);box(t,0,.8,0,2.8,.45,7,C.steel);box(t,0,1.8,2.3,2.8,2.2,2.2,C.gold);box(t,0,2.3,3.43,2.3,.9,.04,C.glass);box(t,0,1.8,-1.1,2.9,1.7,4.2,C.blue);
+        const t=group(g,'后勤保障运输车');t.position.set(x,0,z);box(t,0,.8,0,2.8,.45,7,C.steel);box(t,0,1.8,2.3,2.8,2.2,2.2,C.gold);box(t,0,2.3,3.43,2.3,.9,.04,C.glass);box(t,0,1.8,-1.1,2.9,1.7,4.2,C.blue);
         for(const dx of [-1.55,1.55])for(const zz of [-2,-.6,2.4])cyl(t,dx,.65,zz,.58,.4,C.dark,0,Math.PI/2);
         return t;
     }
@@ -248,17 +248,17 @@ export function buildFactory(view='overview',assets=new Map()) {
         if(!imported(root,'building-a.glb',[-48,.1,32],[30,12,22]))hall(root,-48,32,30,22,9);
         if(!imported(root,'building-k.glb',[52,.1,32],[25,10,23]))hall(root,52,32,25,23,9);
         // Open assembly yard, separated from the excavation and pedestrian circulation.
-        const yardCrane=group(root,'E-05');gantry(yardCrane,28,6,28,15);registerEquipment(yardCrane,'E-05','室外龙门起重机',[30,15.8,6]);for(const x of [14,42])box(root,x,.12,6,.18,.14,24,C.metal);
+        const yardCrane=group(root,'E-05');gantry(yardCrane,28,6,28,15);registerEquipment(yardCrane,'E-05','校园塔吊（基建施工）',[30,15.8,6]);for(const x of [14,42])box(root,x,.12,6,.18,.14,24,C.metal);
         for(let i=0;i<5;i++)for(let j=0;j<3;j++)cyl(root,19+i*3,.5,8+j*2,.4,7,C.metal,Math.PI/2);
         box(root,-18,.04,27,36,.06,26,C.earth);box(root,-18,.13,27,22,.1,14,0x73583f);
         for(const x of [-37,1])for(let z=15;z<41;z+=3){box(root,x,.7,z,.15,1.4,.15,C.gold);box(root,x,.8,z+1.4,.12,.09,2.8,C.gold);}
         for(let i=0;i<4;i++)mesh(root,new THREE.ConeGeometry(2.5+i*.2,2,10),C.earth,[-29+i*3,.95,35]);
-        registerEquipment(excavator(root,-24,23,.5),'E-01','履带挖掘机一号',[-24,5.7,23],true,['Z001']);registerEquipment(excavator(root,-8,30,-.7),'E-02','履带挖掘机二号',[-8,5.7,30],true,['Z001']);registerEquipment(truck(root,9,33),'E-03','土方运输车',[9,3.5,33],true);registerEquipment(truck(root,55,5),'E-04','工程运输车',[55,3.5,5],true);
+        registerEquipment(excavator(root,-24,23,.5),'E-01','校园施工挖掘机一号',[-24,5.7,23],true,['Z001']);registerEquipment(excavator(root,-8,30,-.7),'E-02','校园施工挖掘机二号',[-8,5.7,30],true,['Z001']);registerEquipment(truck(root,9,33),'E-03','渣土运输车',[9,3.5,33],true,[],'巡检关注：车辆行驶范围与行人通道隔离 · 本地模拟位置');registerEquipment(truck(root,55,5),'E-04','后勤保障运输车',[55,3.5,5],true,[],'巡检关注：车辆行驶范围与行人通道隔离 · 本地模拟位置');
         for(const x of [-79,79])for(let z=-56;z<58;z+=4){box(root,x,1.4,z,.09,2.8,.09,C.steel);box(root,x,1.2,z+2,.055,2.4,3.8,C.metal);}
         for(const z of [-57,57])for(let x=-77;x<80;x+=4){if(z>0&&Math.abs(x)<8)continue;box(root,x,1.4,z,.09,2.8,.09,C.steel);box(root,x+2,1.2,z,3.8,2.4,.055,C.metal);}
         box(root,12,1.9,56,5,3.8,4,C.wall);box(root,12,4,56,5.5,.2,4.5,C.blue);
         for(let x=-63;x<66;x+=18){cyl(root,x,3.5,47,.07,7,C.steel);box(root,x,7,47,1.5,.12,.5,C.wall);}
-        const outdoorTanks=group(root,'E-06');for(const x of [8,16]){if(!imported(outdoorTanks,'tank.glb',[x,0,-37],[5,10,5]))cyl(outdoorTanks,x,5,-37,2.5,10,C.metal);}registerEquipment(outdoorTanks,'E-06','燃气调压储罐组',[12,10.8,-37]);
+        const outdoorTanks=group(root,'E-06');for(const x of [8,16]){if(!imported(outdoorTanks,'tank.glb',[x,0,-37],[5,10,5]))cyl(outdoorTanks,x,5,-37,2.5,10,C.metal);}registerEquipment(outdoorTanks,'E-06','燃气调压储罐组',[12,10.8,-37],false,[],'巡检关注：容器压力、泄压阀与燃气泄漏 · 校园场景设计示意');
         root.userData.locations=[{id:'A',kind:'model',title:'A 区 · 教学实验楼',text:'进入高跨钢结构实验楼查看机器人、装配线和机械设备。',anchor:[-28,16,-18],view:'a'},{id:'B',kind:'model',title:'B 区 · 后勤能源站',text:'进入 L 形后勤能源站查看高压设备、阀门组与控制柜。',anchor:[40,17,-28],view:'b'}];
     }else{
         const w=view==='a'?82:96,d=view==='a'?46:64;
@@ -315,25 +315,25 @@ export function buildFactory(view='overview',assets=new Map()) {
             for(const x of [49,54,59]){post(wing,x,15,4.85,.16);box(wing,x,.9,14.5,.65,.15,1.5,C.steel);}box(wing,54,3.8,15,11,2,.28,C.blue);for(const x of [50.5,54,57.5]){box(wing,x,3.8,14.82,3,1.55,.055,C.dark);box(wing,x,3.8,14.77,2.7,1.28,.035,C.glass);}
         }
         if(view==='a'){
-            device('A-01','液压冲压机','巡检关注：运动夹点、液压压力与防护联锁',-20,-9,'press',{height:5.9,w:5.5,d:5.5});
-            device('A-02','数控加工中心','巡检关注：旋转主轴、防护门与切屑飞溅',-8,-9,'cnc',{height:3.8,w:6,d:5});
-            device('A-03','压缩空气储气罐','巡检关注：容器压力、泄压阀与管线连接',7,-9,'tank',{height:5.2,w:6,d:6});
-            device('A-04','气瓶焊接工作站','巡检关注：气瓶固定、软管与动火隔离',20,-8,'welding',{height:3.5,w:6,d:6});
+            device('A-01','材料压力试验机','巡检关注：运动夹点、液压压力与防护联锁',-20,-9,'press',{height:5.9,w:5.5,d:5.5});
+            device('A-02','工程训练数控加工中心','巡检关注：旋转主轴、防护门与切屑飞溅',-8,-9,'cnc',{height:3.8,w:6,d:5});
+            device('A-03','实验室压缩空气储气罐','巡检关注：容器压力、泄压阀与管线连接',7,-9,'tank',{height:5.2,w:6,d:6});
+            device('A-04','实验室气瓶焊接工位','巡检关注：气瓶固定、软管与动火隔离',20,-8,'welding',{height:3.5,w:6,d:6});
             device('A-05','空气压缩机组','巡检关注：高温表面、传动机构与泄漏',-19,9,'compressor',{height:3.2,w:6,d:5});
             device('A-06','实验楼低压配电箱','巡检关注：箱门、接地与支路保护',-7,9,'cabinet',{height:3.2,w:4,d:4,count:2});
-            device('A-07','双联循环水泵组','巡检关注：联轴器防护、振动与积水',8,9,'pump',{height:3,w:6,d:6});
-            device('A-08','生产线操作台','巡检关注：急停、控制按钮与操作权限',21,9,'console',{height:3,w:5,d:4});
-            const crane=group(root,'A-09');gantry(crane,0,4,58,11.7);crane.userData={id:'A-09',kind:'device',view,title:'实验楼桥式起重机',text:'巡检关注：吊具、行程限位与吊运隔离 · 场景设计示意',anchor:[2,12.5,4],zone:'A'};devices.push(crane.userData);
-            device('A-10','装配工业机器人','巡检关注：机械臂运动范围、防护联锁',-16,-17,'robot',{height:4.5,w:6,d:5});device('A-11','搬运工业机器人','巡检关注：机械臂运动范围、夹具防护',13,-17,'robot',{height:4.5,w:6,d:5});device('A-12','滚筒输送装配线','巡检关注：输送夹点、急停与光电保护',-1,-17,'conveyor',{height:2.6,w:21,d:3});
+            device('A-07','实验楼循环水泵组','巡检关注：联轴器防护、振动与积水',8,9,'pump',{height:3,w:6,d:6});
+            device('A-08','实验教学操作台','巡检关注：急停、控制按钮与操作权限',21,9,'console',{height:3,w:5,d:4});
+            const crane=group(root,'A-09');gantry(crane,0,4,58,11.7);crane.userData={id:'A-09',kind:'device',view,title:'实验楼桥式吊车',text:'巡检关注：吊具、行程限位与吊运隔离 · 校园场景设计示意',anchor:[2,12.5,4],zone:'A'};devices.push(crane.userData);
+            device('A-10','机器人教学实验台','巡检关注：机械臂运动范围、防护联锁',-16,-17,'robot',{height:4.5,w:6,d:5});device('A-11','智能搬运实验平台','巡检关注：机械臂运动范围、夹具防护',13,-17,'robot',{height:4.5,w:6,d:5});device('A-12','自动化分拣实训线','巡检关注：输送夹点、急停与光电保护',-1,-17,'conveyor',{height:2.6,w:21,d:3});
             const racks=group(root,'assembly-material-racks');for(const x of [-29,29]){for(const dx of [-3,3])for(const z of [11,18])box(racks,x+dx,2.6,z,.2,5.2,.2,C.blue);for(const y of [1,2.7,4.4]){box(racks,x,y,14.5,6.5,.15,7.5,C.metal);for(const dx of [-1.6,1.6])for(const z of [12.5,16.5])box(racks,x+dx,y+.55,z,2.2,1,2,0x9a8770);}}
             const packing=group(root,'assembly-packing-bench');box(packing,1,1.05,18,10,.2,2.8,C.metal);for(const x of [-3,1,5])for(const z of [17,19])box(packing,x,.5,z,.18,1,.18,C.blue);for(const x of [-2,2,5]){box(packing,x,1.55,18,1.4,.9,1.5,C.blue);cyl(packing,x,2.1,18,.22,.3,C.metal);}
             for(const x of [-31,31])for(const z of [-18,18]){if(!imported(root,'pallet.glb',[x,0,z],[1.8,.2,1.3]))box(root,x,.1,z,1.8,.2,1.3,0x907854);imported(root,'barrel.glb',[x,.2,z],[.8,1.25,.8]);}
         }else{
-            const hv=powerDevice('B-01','10kV 高压开关柜','巡检关注：成套开关柜、联锁、母线与绝缘隔离',-31,-22,20,10,6.8);
+            const hv=powerDevice('B-01','校园10kV高压配电柜','巡检关注：成套开关柜、联锁、母线与绝缘隔离',-31,-22,20,10,6.8);
             box(hv,0,.2,0,18,.4,3.4,C.steel);for(let i=0;i<8;i++){const x=-7.35+i*2.1;powerPanel(hv,x,0,1.95,4.5);for(const z of [-.55,0,.55]){beam(hv,[x,4.72,z],[x,5.9,z],.07,C.dark);for(const y of [5,5.2,5.4])cyl(hv,x,y,z,.19,.08,C.wall);}}
             for(const z of [-.55,0,.55])powerPipe(hv,[[-8.3,5.9,z],[8.3,5.9,z]],.085,z<0?C.red:z>0?C.blue:C.gold);rail(hv,0,0,4.4,18);for(const x of [-9,9])box(hv,x,1.1,3.2,.08,2.2,2.4,C.gold);
 
-            const transformer=powerDevice('B-02','油浸式变压器','巡检关注：散热片、套管、油位与围栏完整性',-8,-22,14,12,8);
+            const transformer=powerDevice('B-02','校园油浸式变压器','巡检关注：散热片、套管、油位与围栏完整性',-8,-22,14,12,8);
             box(transformer,0,.3,0,6.2,.6,5.8,C.steel);box(transformer,0,2.5,0,5,4,3.5,C.blue);box(transformer,0,4.6,0,5.4,.25,3.9,C.metal);
             for(const side of [-1,1])for(let z=-2.1;z<=2.1;z+=.23)box(transformer,side*3.3,2.6,z,1.45,3.7,.095,C.metal);
             for(const side of [-1,1])for(const y of [.9,4.2]){box(transformer,side*3.2,y,0,1.6,.22,4.7,C.steel);powerPipe(transformer,[[side*2.3,y,0],[side*3.2,y,0]],.14);}
@@ -342,37 +342,37 @@ export function buildFactory(view='overview',assets=new Map()) {
             for(const x of [-1.6,1.6]){post(transformer,x,-1.3,5.7,.18,4.725);box(transformer,x,5.62,-1.3,.22,.15,1.3,C.steel);}beam(transformer,[1.2,3.3,1.68],[1.2,3.3,1.85],.075,C.steel);
             for(const x of [-6.3,6.3]){for(const z of [-4.8,4.8])box(transformer,x,1.5,z,.12,3,.12,C.gold);for(let z=-4.8;z<4.9;z+=.4)box(transformer,x,1.5,z,.07,2.7,.07,C.steel);box(transformer,x,2.9,0,.12,.12,9.8,C.gold);}rail(transformer,0,0,5.1,12.6);
 
-            const valves=powerDevice('B-03','工艺介质阀门组','巡检关注：阀位、法兰、压力表与介质隔离',19,-22,17,10,4.3);
+            const valves=powerDevice('B-03','校园燃气调压阀门组','巡检关注：阀位、法兰、压力表与介质隔离',19,-22,17,10,4.3);
             for(const z of [-3,-1,1,3]){const color=z<0?C.blue:C.green;powerPipe(valves,[[-7,1.9,z],[7,1.9,z]],.2,color);for(const x of [-3,3])if(!imported(valves,'industrial-pipes#pipe08',[x,1.9,z],[1.8,1.4,1.4],0,.34))valve(valves,x,1.9,z);
                 for(const x of [-6,0,6])post(valves,x,z,1.93,.16);dial(valves,0,3.1,z+.12,.3);gaugeStem(valves,0,3.1,z+.12,1.9,z);}
             for(const x of [-7,7])powerPipe(valves,[[x,1.9,-3],[x,1.9,3]],.28,C.metal);
 
-            const plc=powerDevice('B-04','仪表与 PLC 控制柜','巡检关注：PLC、仪表屏、线缆与柜内供电',-32,17,17,8,5.5);
+            const plc=powerDevice('B-04','楼宇自控 PLC 柜','巡检关注：PLC、仪表屏、线缆与柜内供电',-32,17,17,8,5.5);
             box(plc,0,.16,0,16,.32,3,C.steel);for(let i=0;i<7;i++){powerPanel(plc,-6+i*2,0,1.85,4);if(i%2===0)dial(plc,-6+i*2,2.05,1.02,.22);}for(const x of [-6,-2,2,6])powerPipe(plc,[[x,.3,-.5],[x,.4,-2.6],[x,.15,-2.6]],.045,C.dark);
 
-            const pumps=powerDevice('B-05','循环排水泵组','巡检关注：三泵联轴器、止回阀、压力表与积水',-10,17,17,12,4.8);
+            const pumps=powerDevice('B-05','校园排水泵组','巡检关注：三泵联轴器、止回阀、压力表与积水',-10,17,17,12,4.8);
             box(pumps,0,.18,0,14,.36,9,C.steel);for(const x of [-4,0,4]){motor(pumps,x,1.2,1.2,2.6,-1);cyl(pumps,x,1.35,-1.3,.87,.9,C.green,Math.PI/2);mesh(pumps,new THREE.TorusGeometry(.72,.16,8,24),C.green,[x,1.35,-1.85]);box(pumps,x,.45,-1.3,1.4,.3,.95,C.steel);
                 powerPipe(pumps,[[x,1.3,-1.8],[x,1.3,-3.8]],.24,C.blue);powerPipe(pumps,[[x,2.1,-1.3],[x,3.2,-1.3],[x,3.2,-3]],.2,C.green);dial(pumps,x,2.8,-.95,.28);gaugeStem(pumps,x,2.8,-.95,2.1,-1.3);}
             for(const [z,y,color,xEnd] of [[-3.8,1.3,C.blue,6],[-3,3.2,C.green,-6]]){powerPipe(pumps,[[-6,y,z],[6,y,z]],.34,color);powerPipe(pumps,[[xEnd,y,z],[xEnd,y,3.8]],.34,color);pipeCap(pumps,[xEnd===6?-6:6,y,z],[1,0,0],.34);
                 for(const x of [-5,5]){post(pumps,x,z,y-.25,.16,.36);box(pumps,x,y-.3,z,.4,.16,.7,C.steel);}}
             if(!imported(pumps,'industrial-pipes#pipe08',[6,1.3,3],[1.6,1.5,1.5],Math.PI/2,.578))valve(pumps,6,1.3,3);valve(pumps,-6,3.2,3);
 
-            const tanks=powerDevice('B-06','压力稳压装置','巡检关注：三联压力容器、泄压阀、平台与液位',16,17,14,12,7.6);
+            const tanks=powerDevice('B-06','校园供水稳压装置','巡检关注：三联压力容器、泄压阀、平台与液位',16,17,14,12,7.6);
             for(const x of [-3.4,0,3.4]){cyl(tanks,x,3.2,0,1.15,4.9,C.metal);mesh(tanks,new THREE.SphereGeometry(1.15,24,12,0,Math.PI*2,0,Math.PI/2),C.metal,[x,5.65,0]);for(const z of [-.65,.65])box(tanks,x,.6,z,.3,1.2,.3,C.steel);
                 for(const y of [1.5,4.9])ring(tanks,x,y,0,1.17,C.steel,Math.PI/2);dial(tanks,x,3.1,1.23,.28);powerPipe(tanks,[[x,6.7,0],[x,7.1,0],[x,7.1,-3]],.16);powerPipe(tanks,[[x,1.4,.85],[x,1.4,1.4]],.12);valve(tanks,x,1.4,1.4);beam(tanks,[x,3.1,1.05],[x,3.1,1.23],.07,C.steel);}
             powerPipe(tanks,[[-4,7.1,-3],[4,7.1,-3],[4,1.5,-3]],.22);pipeCap(tanks,[-4,7.1,-3],[1,0,0]);box(tanks,0,1.2,-3.7,10,.18,1.4,C.steel);rail(tanks,0,1.29,-4.3,10);
             for(const x of [-4,0,4])for(const z of [-4.2,-3.2])post(tanks,x,z,1.2,.14);box(tanks,4.9,1.2,-2.7,2,.18,3,C.steel);for(const z of [-3.7,-1.5])post(tanks,5.6,z,1.2,.14);
             for(let y=.4;y<=1.21;y+=.4)box(tanks,5.6,y,-2,.16,.08,.85,C.metal);for(const z of [-2.45,-1.55])post(tanks,5.6,z,1.8,.09);
 
-            const control=powerDevice('B-07','动力监控操作台','巡检关注：三联监控、急停、操作权限与报警响应',54,10,14,8,4.4);
+            const control=powerDevice('B-07','能源监控操作台','巡检关注：三联监控、急停、操作权限与报警响应',54,10,14,8,4.4);
             for(const x of [-4,0,4]){box(control,x,1.2,0,3.7,2.4,1.8,C.blue);box(control,x,2.5,0,3.8,.18,2.2,C.metal,.15);for(const dx of [-.85,.85]){box(control,x+dx,2.85,-.4,.13,.6,.13,C.steel);box(control,x+dx,3.25,-.4,1.45,.9,.12,C.dark);box(control,x+dx,3.25,-.32,1.28,.7,.035,C.glass);}for(let dx=-1.2;dx<1.4;dx+=.4)box(control,x+dx,2.66,.65,.1,.06,.1,C.gold);
                 cyl(control,x,.55,2.5,.08,1.1,C.steel);box(control,x,1.2,2.5,1.3,.16,1.15,C.dark);box(control,x,1.85,3,.95,1.3,.15,C.blue);for(const dx of [-.6,.6])box(control,x+dx,.15,2.5,.1,.1,1.3,C.steel);}
 
-            const exchanger=powerDevice('B-08','板式换热机组','巡检关注：换热板密封、压差与高温管路',18,-7,17,8,5.9);
+            const exchanger=powerDevice('B-08','校园板式换热机组','巡检关注：换热板密封、压差与高温管路',18,-7,17,8,5.9);
             box(exchanger,0,.2,0,14,.4,6,C.steel);for(const x of [-4,4]){box(exchanger,x-1.5,2.35,0,.35,4.1,3,C.blue);box(exchanger,x+1.5,2.35,0,.35,4.1,3,C.blue);for(let dx=-1.3;dx<=1.3;dx+=.15)box(exchanger,x+dx,2.35,0,.055,3.7,2.65,C.metal);
                 for(const y of [.7,4])for(const z of [-1.4,1.4])beam(exchanger,[x-1.8,y,z],[x+1.8,y,z],.065,C.steel);for(const y of [1.2,3.5])powerPipe(exchanger,[[x+1.7,y,0],[x+2.5,y,0],[x+2.5,y,2.7]],.17,y<2?C.blue:C.green);dial(exchanger,x,4.9,1.1,.27);powerPipe(exchanger,[[x+2.5,3.5,1.1],[x,3.5,1.1],[x,4.9,1.1]],.055);}
 
-            const generator=powerDevice('B-09','备用柴油发电机组','巡检关注：联轴器、燃油管路、散热与高温排气',-32,-7,19,8,6.5);
+            const generator=powerDevice('B-09','应急柴油发电机组','巡检关注：联轴器、燃油管路、散热与高温排气',-32,-7,19,8,6.5);
             box(generator,0,.25,0,16,.5,6,C.steel);box(generator,-3,1.8,0,7,2.8,3,C.green);for(let x=-5.7;x<0;x+=.65){box(generator,x,3.35,0,.42,.4,2.6,C.metal);powerPipe(generator,[[x,3.3,1.4],[x,3.8,1.8],[x,4.2,1.8]],.09,C.steel);}
             cyl(generator,3.2,1.8,0,1.5,4.8,C.blue,0,Math.PI/2);for(let x=1;x<5.7;x+=.35)ring(generator,x,1.8,0,1.5,C.metal,0,Math.PI/2);
             beam(generator,[.3,1.8,0],[1.1,1.8,0],.22,C.metal);box(generator,.7,1.8,0,.9,.9,.9,C.gold);powerPipe(generator,[[-5.7,4.2,1.8],[-.5,4.2,1.8],[-.5,4.2,-.5],[-2,4.2,-.5]],.11);
@@ -383,7 +383,7 @@ export function buildFactory(view='overview',assets=new Map()) {
             for(const x of [-4,4]){box(compressor,x,.2,0,6.5,.4,5,C.steel);cyl(compressor,x,1.35,0,1.1,5.8,C.blue,0,Math.PI/2);box(compressor,x-.8,3,0,2.5,1.5,2,C.metal);for(let dx=-1.7;dx<.5;dx+=.22)box(compressor,x+dx,3.1,1.03,.07,1.3,.08,C.steel);motor(compressor,x+1.9,2.9,0,2.5);powerPipe(compressor,[[x,3.6,0],[x,4.5,0],[x,4.5,-2.8]],.11);dial(compressor,x,2,1.15,.25);}
             powerPipe(compressor,[[-6,4.5,-2.8],[6,4.5,-2.8]],.18,C.metal);pipeCap(compressor,[-6,4.5,-2.8],[1,0,0],.18);
 
-            const water=powerDevice('B-11','软化过滤水处理装置','巡检关注：滤罐压差、加药泵、阀门及泄漏',34,16,12,12,6.7);
+            const water=powerDevice('B-11','生活水软化过滤装置','巡检关注：滤罐压差、加药泵、阀门及泄漏',34,16,12,12,6.7);
             box(water,0,.18,0,10,.36,9,C.steel);for(const x of [-2.7,0,2.7]){for(const dx of [-.65,.65])post(water,x+dx,-1,.55,.13,.2);cyl(water,x,2.5,-1,1,4.1,C.green);mesh(water,new THREE.SphereGeometry(1,20,12,0,Math.PI*2,0,Math.PI/2),C.green,[x,4.55,-1]);powerPipe(water,[[x,5.5,-1],[x,5.9,-1],[x,5.9,-3.8]],.15);dial(water,x,2.7,.05,.25);beam(water,[x,2.7,-.1],[x,2.7,.05],.06,C.steel);}
             powerPipe(water,[[-3.5,5.9,-3.8],[3.5,5.9,-3.8],[3.5,1.3,-3.8]],.22);pipeCap(water,[-3.5,5.9,-3.8],[1,0,0]);for(const x of [-2.7,0,2.7]){cyl(water,x,.8,2.7,.62,1.4,C.wall);box(water,x,1.6,2.7,.7,.3,.7,C.blue);powerPipe(water,[[x,1.7,2.7],[x,2.3,2.7],[x,2.3,-.1]],.035,C.dark);}
 
